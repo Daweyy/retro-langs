@@ -154,11 +154,7 @@ class Langs extends EventEmitter {
         langFiles = data.substring(3, data.length - 1).split('|');
         langFiles = langFiles.map((x) => x.replaceAll(',', '_'));
 
-        if (this.lastData) {
-          if (JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
-            this.onUpdate(langFiles);
-          }
-        } else {
+        if (!this.lastData || JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
           this.onUpdate(langFiles);
         }
       }
