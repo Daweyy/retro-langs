@@ -63,6 +63,8 @@ class Langs extends EventEmitter {
     if (!fs.existsSync(this.saveFolder)) {
       fs.mkdirSync(this.saveFolder, { recursive: true });
     }
+    // update file content, in case there have been some changes (multiples watchers running ...)
+    this.versionFileContent = this.getLastData();
     this.versionFileContent[this.lang] = data;
     fs.writeFileSync(`${this.saveFolder}/versions.json`, JSON.stringify(this.versionFileContent));
   }

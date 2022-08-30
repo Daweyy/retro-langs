@@ -1,6 +1,6 @@
 {
   "name": "retro-langs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dofus Retro langs watcher",
   "main": "src/index.js",
   "bin": {
