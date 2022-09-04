@@ -141,25 +141,32 @@ class Langs extends EventEmitter {
   }
 
   async watcher() {
-    const response = await axios({
-      method: 'GET',
-      url: `${RETRO_CDN}/lang/versions_${this.lang}.txt`,
-    });
+    const run = async () => {
+      const response = await axios({
+        method: 'GET',
+        url: `${RETRO_CDN}/lang/versions_${this.lang}.txt`,
+      });
+    };
 
-    if (response.status === 200) {
-      if (this.lastModifiedHeader !== response.headers['last-modified']) {
-        const data = response.data || {};
-        let langFiles = [];
+    try {
+      await pRetry(run, { retries: 3 });
+      if (response.status === 200) {
+        if (this.lastModifiedHeader !== response.headers['last-modified']) {
+          const data = response.data || {};
+          let langFiles = [];
 
-        this.lastModifiedHeader = response.headers['last-modified'];
+          this.lastModifiedHeader = response.headers['last-modified'];
 
-        langFiles = data.substring(3, data.length - 1).split('|');
-        langFiles = langFiles.map((x) => x.replaceAll(',', '_'));
+          langFiles = data.substring(3, data.length - 1).split('|');
+          langFiles = langFiles.map((x) => x.replaceAll(',', '_'));
 
-        if (!this.lastData || JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
-          this.onUpdate(langFiles);
+          if (!this.lastData || JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
+            this.onUpdate(langFiles);
+          }
         }
       }
+    } catch (err) {
+      console.log(`[${this.lang}] Couldn't get versions.txt from CDN: ${err.message}`);
     }
   }
 }
