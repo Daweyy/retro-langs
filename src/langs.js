@@ -146,10 +146,6 @@ class Langs extends EventEmitter {
         method: 'GET',
         url: `${RETRO_CDN}/lang/versions_${this.lang}.txt`,
       });
-    };
-
-    try {
-      await pRetry(run, { retries: 3 });
       if (response.status === 200) {
         if (this.lastModifiedHeader !== response.headers['last-modified']) {
           const data = response.data || {};
@@ -165,6 +161,10 @@ class Langs extends EventEmitter {
           }
         }
       }
+    };
+
+    try {
+      await pRetry(run, { retries: 3 });
     } catch (err) {
       console.log(`[${this.lang}] Couldn't get versions.txt from CDN: ${err.message}`);
     }
