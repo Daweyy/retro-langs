@@ -16,8 +16,10 @@ Is available through a CLI and Class usable in your own code
     - [new Langs(lang, [saveFolder])](#new-langslang-savefolder)
     - [langs.watch(interval, [downloadNewFiles])](#langswatchinterval-downloadnewfiles)
     - [langs.unwatch()](#langsunwatch)
-    - ["langs:update"](#langsupdate)
-    - ["langs:downloaded"](#langsdownloaded)
+    - ["update"](#update)
+    - ["downloaded"](#downloaded)
+    - ["watching"](#watching)
+    - ["error"](#error)
     - [Exemple](#exemple)
 
 <a name="Installation"></a>
@@ -47,7 +49,10 @@ retro-langs [command] --help
 Watch versions.txt file on DofusRetro CDN
 
 **Kind**: global class
-**Emits**: [<code>langs:update</code>](#Langs+langs_update), [<code>langs:downloaded</code>](#Langs+langs_downloaded)
+**Emits**: [<code>update</code>](#Langs+update), 
+[<code>downloaded</code>](#Langs+downloaded), 
+[<code>watching</code>](#Langs+watching), 
+[<code>error</code>](#Langs+error)
 
 <a name="new_Langs_new"></a>
 
@@ -69,7 +74,7 @@ Watch remote versions.txt file
 
 | Param              | Type                 | Default            | Description                       |
 | ------------------ | -------------------- | ------------------ | --------------------------------- |
-| interval           | <code>number</code>  |                    | interval in ms                    |
+| interval           | <code>number</code>  |                    | interval in seconds                    |
 | [downloadNewFiles] | <code>boolean</code> | <code>false</code> | download new swf files on changes |
 
 <a name="Langs+unwatch"></a>
@@ -78,9 +83,9 @@ Watch remote versions.txt file
 Remove the watcher of the remote versions.txt file
 
 **Kind**: instance method of [<code>Langs</code>](#Langs)
-<a name="Langs+langs_update"></a>
+<a name="Langs+update"></a>
 
-### "langs:update"
+### "update"
 Langs update event
 
 **Kind**: event emitted by [<code>Langs</code>](#Langs)
@@ -91,9 +96,9 @@ Langs update event
 | lang  | <code>string</code>               | Language                                     |
 | files | <code>Array.&lt;string&gt;</code> | Array of new files names (without extension) |
 
-<a name="Langs+langs_downloaded"></a>
+<a name="Langs+downloaded"></a>
 
-### "langs:downloaded"
+### "downloaded"
 Lang downloaded event
 
 **Kind**: event emitted by [<code>Langs</code>](#Langs)
@@ -104,6 +109,33 @@ Lang downloaded event
 | lang | <code>string</code> | Language                         |
 | file | <code>string</code> | File name (without extension)    |
 | path | <code>string</code> | Full path of the downloaded file |
+
+<a name="Langs+watching"></a>
+
+### "watching"
+Start watching langs event
+
+**Kind**: event emitted by [<code>Langs</code>](#Langs)
+**Properties**
+
+| Name | Type                | Description                      |
+| ---- | ------------------- | -------------------------------- |
+| lang | <code>string</code> | Language                         |
+| interval | <code>number</code> | interval in seconds          |
+| saveFolder | <code>string</code> | Full path of the downloading directory |
+| downloadNewFiles | <code>boolean</code> | download new swf files |
+
+<a name="Langs+error"></a>
+
+### "error"
+Error event
+
+**Kind**: event emitted by [<code>Langs</code>](#Langs)
+**Properties**
+
+| Name | Type                | Description                      |
+| ---- | ------------------- | -------------------------------- |
+| error | <code>string</code> | Error message                   |
 
 <a name="Langs+exemple"></a>
 
@@ -116,11 +148,11 @@ const Langs = require('retro-langs');
 */
 const langWatcher = new Langs('fr', 'output/dir');
 
-langWatcher.on('langs:update', ({ lang, files }) => {
+langWatcher.on('update', ({ lang, files }) => {
   // an update of langs is available
 });
 
-langWatcher.on('langs:downloaded', ({ lang, file, path }) => {
+langWatcher.on('downloaded', ({ lang, file, path }) => {
   // a lang file has been downloaded
 });
 

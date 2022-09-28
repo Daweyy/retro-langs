@@ -80,10 +80,12 @@ class Langs extends EventEmitter {
       throw new Error('Cannot watch multiple times (memory leaks)');
     }
     this.downloadNewFiles = downloadNewFiles;
-    console.log(`[${this.lang}] Watching for changes (${interval}s)`);
-    if (this.downloadNewFiles) {
-      console.log(`[${this.lang}] Changes will be downloaded into ${path.resolve(this.saveFolder, this.lang)}`);
-    }
+    this.emit('watching', {
+      lang: this.lang,
+      interval,
+      saveFolder: this.saveFolder,
+      downloadNewFiles: this.downloadNewFiles
+    });
     this.watchInterval = setInterval(this.watcher.bind(this), interval * 1000);
     this.watcher();
   }
@@ -114,7 +116,7 @@ class Langs extends EventEmitter {
             });
             const stream = response.data.pipe(fs.createWriteStream(path.resolve(currentLangFolder, `${file}.swf`)));
             stream.on('finish', () => {
-              this.emit('langs:downloaded', {
+              this.emit('downloaded', {
                 lang: this.lang,
                 file,
                 path: path.resolve(currentLangFolder, `${file}.swf`),
@@ -124,14 +126,14 @@ class Langs extends EventEmitter {
         }));
       });
       await Promise.all(toDownload);
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      this.emit('error', error);
     }
   }
 
   onUpdate(files) {
     this.saveData(files);
-    this.emit('langs:update', {
+    this.emit('update', {
       lang: this.lang,
       files,
     });
@@ -165,8 +167,8 @@ class Langs extends EventEmitter {
 
     try {
       await pRetry(run, { retries: 3 });
-    } catch (err) {
-      console.log(`[${this.lang}] Couldn't get versions.txt from CDN: ${err.message}`);
+    } catch (error) {
+      this.emit('error', error);
     }
   }
 }

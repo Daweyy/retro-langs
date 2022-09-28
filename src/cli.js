@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const { Command } = require('commander');
+const path = require('path');
 
 const Langs = require('./langs');
 
@@ -8,7 +9,7 @@ const program = new Command();
 program
   .name('dofusretro-langs')
   .description('CLI utilities for DofusRetro Langs')
-  .version('0.0.1');
+  .version('1.1.0');
 
 program.command('watch')
   .description('Watch for changes')
@@ -18,13 +19,22 @@ program.command('watch')
   .option('-d, --dest <string>', 'destination directory (no specified = actual directory /langs)')
   .action(async (options) => {
     const langWatcher = new Langs(options.language, options.dest);
-    langWatcher.watch(options.time, options.download);
-    langWatcher.on('langs:update', ({ lang, files }) => {
+    langWatcher.on('update', ({ lang, files }) => {
       console.log(`[${lang}] Update detected ! (${files})`);
     });
-    langWatcher.on('langs:downloaded', ({ lang, file, path }) => {
+    langWatcher.on('downloaded', ({ lang, file, path }) => {
       console.log(`[${lang}] ${file} saved in ${path}`);
     });
+    langWatcher.on('watching', ({ lang, interval, saveFolder, downloadNewFiles }) => {
+      console.log(`[${lang}] Watching for changes (${interval}s)`);
+      if (downloadNewFiles) {
+        console.log(`[${lang}] Changes will be downloaded into ${path.join(saveFolder, lang)}`);
+      }
+    });
+    langWatcher.on('error', (error) => {
+      console.error(error);
+    });
+    langWatcher.watch(options.time, options.download);
   });
 
 program.parse(process.argv);
