@@ -8,6 +8,7 @@ const pRetry = require('p-retry');
 const RETRO_CDN = 'https://dofusretro.cdn.ankama.com';
 const LANGUAGES = ['fr', 'en', 'es', 'de', 'pt', 'it', 'nl'];
 const MAX_CONCURRENT_DL = 5;
+const BUILDS = ['prod', 'beta', 'temporis'];
 
 /**
  * Langs update event
@@ -16,6 +17,8 @@ const MAX_CONCURRENT_DL = 5;
  * @type {object}
  * @property {string} lang - Language
  * @property {string[]} files - Array of new files names (without extension)
+ * @property {string} build - Lang type build (prod, beta, temporis)
+
  */
 
 /**
@@ -26,23 +29,35 @@ const MAX_CONCURRENT_DL = 5;
  * @property {string} lang - Language
  * @property {string} file - File name (without extension)
  * @property {string} path - Full path of the downloaded file
+ * @property {string} build - Lang type build (prod, beta, temporis)
+ */
+
+/**
+ * Error event
+ * 
+ * @event Langs#langs:error
+ * @type {object}
+ * @property {Error} error - Error message
  */
 
 /**
  * Watch versions.txt file on DofusRetro CDN
  * @fires Langs#langs:update
  * @fires Langs#langs:downloaded
+ * @fires Langs#langs:error
  */
 class Langs extends EventEmitter {
   /**
    * Creates an instance of Langs.
    * @param {string} lang - Language to watch (if invalid 'fr' is used)
    * @param {string} [saveFolder=langs] - Folder used to save versions.json and swf langs files
+   * @param {string} 
    */
-  constructor(lang, saveFolder = path.resolve('./langs')) {
+  constructor(lang, saveFolder = 'langs', build = 'prod') {
     super();
     this.lang = (LANGUAGES.includes(lang)) ? lang : 'fr';
-    this.saveFolder = saveFolder;
+    this.build = (BUILDS.includes(build.toLowerCase())) ? build : 'prod';
+    this.saveFolder = path.resolve(path.join(saveFolder, this.build));
     this.lastModifiedHeader = null;
     this.versionFileContent = this.getLastData();
     this.lastData = this.versionFileContent[this.lang];
@@ -84,7 +99,8 @@ class Langs extends EventEmitter {
       lang: this.lang,
       interval,
       saveFolder: this.saveFolder,
-      downloadNewFiles: this.downloadNewFiles
+      downloadNewFiles: this.downloadNewFiles,
+      build: this.build,
     });
     this.watchInterval = setInterval(this.watcher.bind(this), interval * 1000);
     this.watcher();
@@ -108,10 +124,11 @@ class Langs extends EventEmitter {
       const toDownload = [];
       files.forEach((file) => {
         toDownload.push(this.addQueue(async () => {
+          const buildPart = (this.build === 'prod') ? '' : `/${this.build}`;
           await pRetry(async () => {
             const response = await axios({
               method: 'get',
-              url: `${RETRO_CDN}/lang/swf/${file}.swf`,
+              url: `${RETRO_CDN}${buildPart}/lang/swf/${file}.swf`,
               responseType: 'stream',
             });
             const stream = response.data.pipe(fs.createWriteStream(path.resolve(currentLangFolder, `${file}.swf`)));
@@ -120,6 +137,7 @@ class Langs extends EventEmitter {
                 lang: this.lang,
                 file,
                 path: path.resolve(currentLangFolder, `${file}.swf`),
+                build: this.build,
               });
             });
           }, { retries: 3 });
@@ -136,6 +154,7 @@ class Langs extends EventEmitter {
     this.emit('update', {
       lang: this.lang,
       files,
+      build: this.build,
     });
     if (this.downloadNewFiles) {
       this.downloadFiles(files);
@@ -144,24 +163,29 @@ class Langs extends EventEmitter {
 
   async watcher() {
     const run = async () => {
-      const response = await axios({
-        method: 'GET',
-        url: `${RETRO_CDN}/lang/versions_${this.lang}.txt`,
-      });
-      if (response.status === 200) {
-        if (this.lastModifiedHeader !== response.headers['last-modified']) {
-          const data = response.data || {};
-          let langFiles = [];
+      try {
+        const buildPart = (this.build === 'prod') ? '' : `/${this.build}`;
+        const response = await axios({
+          method: 'GET',
+          url: `${RETRO_CDN}${buildPart}/lang/versions_${this.lang}.txt`,
+        });
+        if (response.status === 200) {
+          if (this.lastModifiedHeader !== response.headers['last-modified']) {
+            const data = response.data || {};
+            let langFiles = [];
 
-          this.lastModifiedHeader = response.headers['last-modified'];
+            this.lastModifiedHeader = response.headers['last-modified'];
 
-          langFiles = data.substring(3, data.length - 1).split('|');
-          langFiles = langFiles.map((x) => x.replaceAll(',', '_'));
+            langFiles = data.substring(3, data.length - 1).split('|');
+            langFiles = langFiles.map((x) => x.replaceAll(',', '_'));
 
-          if (!this.lastData || JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
-            this.onUpdate(langFiles);
+            if (!this.lastData || JSON.stringify(this.lastData) !== JSON.stringify(langFiles)) {
+              this.onUpdate(langFiles);
+            }
           }
         }
+      } catch (error) {
+        this.emit('error', error);
       }
     };
 

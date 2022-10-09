@@ -64,6 +64,7 @@ Creates an instance of Langs.
 | ------------ | ------------------- | ------------------------------ | ----------------------------------------------------- |
 | lang         | <code>string</code> |                                | Language to watch (if invalid 'fr' is used)           |
 | [saveFolder] | <code>string</code> | <code>&quot;langs&quot;</code> | Folder used to save versions.json and swf langs files |
+| build | <code>string</code> | <code>&quot;prod&quot;</code> | lang build type : prod (default), temporis or beta |
 
 <a name="Langs+watch"></a>
 
@@ -95,6 +96,7 @@ Langs update event
 | ----- | --------------------------------- | -------------------------------------------- |
 | lang  | <code>string</code>               | Language                                     |
 | files | <code>Array.&lt;string&gt;</code> | Array of new files names (without extension) |
+| build | <code>string</code> | lang build type |
 
 <a name="Langs+downloaded"></a>
 
@@ -109,6 +111,7 @@ Lang downloaded event
 | lang | <code>string</code> | Language                         |
 | file | <code>string</code> | File name (without extension)    |
 | path | <code>string</code> | Full path of the downloaded file |
+| build | <code>string</code> | lang build type |
 
 <a name="Langs+watching"></a>
 
@@ -124,6 +127,7 @@ Start watching langs event
 | interval | <code>number</code> | interval in seconds          |
 | saveFolder | <code>string</code> | Full path of the downloading directory |
 | downloadNewFiles | <code>boolean</code> | download new swf files |
+| build | <code>string</code> | lang build type |
 
 <a name="Langs+error"></a>
 
@@ -135,7 +139,7 @@ Error event
 
 | Name | Type                | Description                      |
 | ---- | ------------------- | -------------------------------- |
-| error | <code>string</code> | Error message                   |
+| error | <code>error</code> | Error message                   |
 
 <a name="Langs+exemple"></a>
 
@@ -144,15 +148,16 @@ Error event
 const Langs = require('retro-langs');
 /**
 * Watched language is fr
-* Working directory will be ./output/dir/
+* Working directory is ./output/dir/
+* Lang build type is temporis (can also be 'beta' or 'prod' by default)
 */
-const langWatcher = new Langs('fr', 'output/dir');
+const langWatcher = new Langs('fr', 'output/dir', 'temporis');
 
-langWatcher.on('update', ({ lang, files }) => {
+langWatcher.on('update', ({ lang, files, build }) => {
   // an update of langs is available
 });
 
-langWatcher.on('downloaded', ({ lang, file, path }) => {
+langWatcher.on('downloaded', ({ lang, file, path, build }) => {
   // a lang file has been downloaded
 });
 
