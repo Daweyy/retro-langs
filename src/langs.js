@@ -8,7 +8,7 @@ const pRetry = require('p-retry');
 const RETRO_CDN = 'https://dofusretro.cdn.ankama.com';
 const LANGUAGES = ['fr', 'en', 'es', 'de', 'pt', 'it', 'nl'];
 const MAX_CONCURRENT_DL = 5;
-const BUILDS = ['prod', 'beta', 'temporis'];
+const BUILDS = ['prod', 'beta', 'temporis', 'betaenv'];
 
 /**
  * Langs update event
