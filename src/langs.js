@@ -8,7 +8,7 @@ const pRetry = require('p-retry');
 const RETRO_CDN = 'https://dofusretro.cdn.ankama.com';
 const LANGUAGES = ['fr', 'en', 'es', 'de', 'pt', 'it', 'nl'];
 const MAX_CONCURRENT_DL = 5;
-const BUILDS = ['prod', 'beta', 'temporis', 'betaenv'];
+const BUILDS = ['prod', 'beta', 'temporis', 'betaenv', 'ephemeris2releasebucket'];
 
 /**
  * Langs update event
@@ -34,7 +34,7 @@ const BUILDS = ['prod', 'beta', 'temporis', 'betaenv'];
 
 /**
  * Error event
- * 
+ *
  * @event Langs#langs:error
  * @type {object}
  * @property {Error} error - Error message
@@ -51,7 +51,7 @@ class Langs extends EventEmitter {
    * Creates an instance of Langs.
    * @param {string} lang - Language to watch (if invalid 'fr' is used)
    * @param {string} [saveFolder=langs] - Folder used to save versions.json and swf langs files
-   * @param {string} 
+   * @param {string}
    */
   constructor(lang, saveFolder = 'langs', build = 'prod') {
     super();
